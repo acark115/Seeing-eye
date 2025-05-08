@@ -1,322 +1,33 @@
-"""import cv2
-import subprocess  # Sesli okuma için
-import time        # Aynı nesneyi tekrar tekrar söylememesi için
-
-classNames = []
-classFile = "/home/fsociety/Desktop/Object_Detection_Files/coco.names"
-with open(classFile, "rt") as f:
-    classNames = f.read().rstrip("\n").split("\n")
-
-configPath = "/home/fsociety/Desktop/Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
-weightsPath = "/home/fsociety/Desktop/Object_Detection_Files/frozen_inference_graph.pb"
-
-net = cv2.dnn_DetectionModel(weightsPath, configPath)
-net.setInputSize(320, 320)
-net.setInputScale(1.0 / 127.5)
-net.setInputMean((127.5, 127.5, 127.5))
-net.setInputSwapRB(True)
-
-# Konuşulan nesneleri ve zamanlarını tutmak için sözlük
-last_spoken = {}
-
-def speak(text):
-    subprocess.run(["espeak", "-s", "150", text])
-
-def getObjects(img, thres, nms, draw=True, objects=[]):
-    classIds, confs, bbox = net.detect(img, confThreshold=thres, nmsThreshold=nms)
-    objectInfo = []
-    if len(objects) == 0: 
-        objects = classNames
-    if len(classIds) != 0:
-        for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-            className = classNames[classId - 1]
-            if className in objects:
-                objectInfo.append([box, className])
-                if draw:
-                    cv2.rectangle(img, box, color=(0, 255, 0), thickness=2)
-                    cv2.putText(img, className.upper(), (box[0]+10, box[1]+30),
-                                cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-                    cv2.putText(img, str(round(confidence*100, 2)), (box[0]+200, box[1]+30),
-                                cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    return img, objectInfo
-
-if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
-    cap.set(3, 640)
-    cap.set(4, 480)
-
-    while True:
-        success, img = cap.read()
-        result, objectInfo = getObjects(img, 0.45, 0.2)
-
-        current_time = time.time()
-
-        for box, name in objectInfo:
-            # Eğer daha önce söylenmemişse ya da üzerinden 5 saniye geçmişse tekrar söyle
-            if name not in last_spoken or (current_time - last_spoken[name]) > 5:
-                print(f"Detected: {name}")
-                speak(name)
-                last_spoken[name] = current_time
-
-        cv2.imshow("Output", img)
-        if cv2.waitKey(1) == 27:  # ESC tuşuna basılırsa çık
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-"""
-"""import cv2
-import subprocess
-import time
-
-# Türkçe sınıf isimleri sözlüğü (İstediğin kadar genişletebilirsin)
-turkish_labels = {
-    "person": "insan",
-    "bicycle": "bisiklet",
-    "car": "araba",
-    "motorcycle": "motosiklet",
-    "airplane": "uçak",
-    "bus": "otobüs",
-    "train": "tren",
-    "truck": "kamyon",
-    "boat": "tekne",
-    "traffic light": "trafik ışığı",
-    "fire hydrant": "yangın musluğu",
-    "stop sign": "dur işareti",
-    "parking meter": "parkmetre",
-    "bench": "bank",
-    "bird": "kuş",
-    "cat": "kedi",
-    "dog": "köpek",
-    "horse": "at",
-    "sheep": "koyun",
-    "cow": "inek",
-    "elephant": "fil",
-    "bear": "ayı",
-    "zebra": "zebra",
-    "giraffe": "zürafa",
-    "backpack": "sırt çantası",
-    "umbrella": "şemsiye",
-    "handbag": "el çantası",
-    "tie": "kravat",
-    "suitcase": "bavul",
-    "frisbee": "frizbi",
-    "skis": "kayaklar",
-    "snowboard": "snowboard",
-    "sports ball": "top",
-    "kite": "uçurtma",
-    "baseball bat": "beyzbol sopası",
-    "baseball glove": "beyzbol eldiveni",
-    "skateboard": "kaykay",
-    "surfboard": "sörf tahtası",
-    "tennis racket": "tenis raketi",
-    "bottle": "şişe",
-    "wine glass": "şarap bardağı",
-    "cup": "fincan",
-    "fork": "çatal",
-    "knife": "bıçak",
-    "spoon": "kaşık",
-    "bowl": "kase",
-    "banana": "muz",
-    "apple": "elma",
-    "sandwich": "sandviç",
-    "orange": "portakal",
-    "broccoli": "brokoli",
-    "carrot": "havuç",
-    "hot dog": "sosisli",
-    "pizza": "pizza",
-    "donut": "donut",
-    "cake": "pasta",
-    "chair": "sandalye",
-    "couch": "kanepe",
-    "potted plant": "saksı bitkisi",
-    "bed": "yatak",
-    "dining table": "yemek masası",
-    "tv": "televizyon",
-    "laptop": "laptop",
-    "mouse": "fare",
-    "remote": "kumanda",
-    "keyboard": "klavye",
-    "cell phone": "cep telefonu",
-    "microwave": "mikrodalga",
-    "oven": "fırın",
-    "toaster": "ekmek kızartma makinesi",
-    "sink": "lavabo",
-    "refrigerator": "buzdolabı",
-    "book": "kitap",
-    "clock": "saat",
-    "vase": "vazo",
-    "scissors": "makas",
-    "teddy bear": "oyuncak ayı",
-    "hair drier": "saç kurutma makinesi",
-    "toothbrush": "diş fırçası"
-}
-
-# Seslendirme fonksiyonu (Türkçe)
-def speak(text):
-    subprocess.run(["espeak", "-v", "tr", "-s", "150", text])
-
-# Sınıf adlarını yükle
-classNames = []
-classFile = "/home/fsociety/Desktop/Object_Detection_Files/coco.names"
-with open(classFile, "rt") as f:
-    classNames = f.read().rstrip("\n").split("\n")
-
-# Model dosyaları
-configPath = "/home/fsociety/Desktop/Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
-weightsPath = "/home/fsociety/Desktop/Object_Detection_Files/frozen_inference_graph.pb"
-
-# Model yükleme
-net = cv2.dnn_DetectionModel(weightsPath, configPath)
-net.setInputSize(320, 320)
-net.setInputScale(1.0 / 127.5)
-net.setInputMean((127.5, 127.5, 127.5))
-net.setInputSwapRB(True)
-
-# Aynı nesneyi sürekli söylememek için zaman takibi
-last_spoken = {}
-
-def getObjects(img, thres, nms, draw=True, objects=[]):
-    classIds, confs, bbox = net.detect(img, confThreshold=thres, nmsThreshold=nms)
-    objectInfo = []
-    if len(objects) == 0:
-        objects = classNames
-    if len(classIds) != 0:
-        for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-            className = classNames[classId - 1]
-            if className in objects:
-                objectInfo.append([box, className])
-                if draw:
-                    cv2.rectangle(img, box, color=(0, 255, 0), thickness=2)
-                    cv2.putText(img, className.upper(), (box[0]+10, box[1]+30),
-                                cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-                    cv2.putText(img, str(round(confidence*100, 2)), (box[0]+200, box[1]+30),
-                                cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    return img, objectInfo
-
-# Ana döngü
-if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
-    cap.set(3, 640)
-    cap.set(4, 480)
-
-    while True:
-        success, img = cap.read()
-        result, objectInfo = getObjects(img, 0.45, 0.2)
-
-        current_time = time.time()
-        for box, name in objectInfo:
-            turkish_name = turkish_labels.get(name, name)  # Türkçeye çevir
-            if name not in last_spoken or (current_time - last_spoken[name]) > 5:
-                print(f"Algılandı: {turkish_name}")
-                speak(turkish_name)
-                last_spoken[name] = current_time
-
-        cv2.imshow("Kamera", img)
-        if cv2.waitKey(1) == 27:  # ESC tuşuyla çık
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-"""
 import cv2
+import numpy as np
 import subprocess
 import time
-
-# Türkçe sınıf isimleri sözlüğü
-turkish_labels = {
-    "person": "insan",
-    "bicycle": "bisiklet",
-    "car": "araba",
-    "motorcycle": "motosiklet",
-    "airplane": "uçak",
-    "bus": "otobüs",
-    "train": "tren",
-    "truck": "kamyon",
-    "boat": "tekne",
-    "traffic light": "trafik ışığı",
-    "fire hydrant": "yangın musluğu",
-    "stop sign": "dur işareti",
-    "parking meter": "parkmetre",
-    "bench": "bank",
-    "bird": "kuş",
-    "cat": "kedi",
-    "dog": "köpek",
-    "horse": "at",
-    "sheep": "koyun",
-    "cow": "inek",
-    "elephant": "fil",
-    "bear": "ayı",
-    "zebra": "zebra",
-    "giraffe": "zürafa",
-    "backpack": "sırt çantası",
-    "umbrella": "şemsiye",
-    "handbag": "el çantası",
-    "tie": "kravat",
-    "suitcase": "bavul",
-    "frisbee": "frizbi",
-    "skis": "kayaklar",
-    "snowboard": "snowboard",
-    "sports ball": "top",
-    "kite": "uçurtma",
-    "baseball bat": "beyzbol sopası",
-    "baseball glove": "beyzbol eldiveni",
-    "skateboard": "kaykay",
-    "surfboard": "sörf tahtası",
-    "tennis racket": "tenis raketi",
-    "bottle": "şişe",
-    "wine glass": "şarap bardağı",
-    "cup": "fincan",
-    "fork": "çatal",
-    "knife": "bıçak",
-    "spoon": "kaşık",
-    "bowl": "kase",
-    "banana": "muz",
-    "apple": "elma",
-    "sandwich": "sandviç",
-    "orange": "portakal",
-    "broccoli": "brokoli",
-    "carrot": "havuç",
-    "hot dog": "sosisli",
-    "pizza": "pizza",
-    "donut": "donut",
-    "cake": "pasta",
-    "chair": "sandalye",
-    "couch": "kanepe",
-    "potted plant": "saksı bitkisi",
-    "bed": "yatak",
-    "dining table": "yemek masası",
-    "tv": "televizyon",
-    "laptop": "laptop",
-    "mouse": "fare",
-    "remote": "kumanda",
-    "keyboard": "klavye",
-    "cell phone": "cep telefonu",
-    "microwave": "mikrodalga",
-    "oven": "fırın",
-    "toaster": "ekmek kızartma makinesi",
-    "sink": "lavabo",
-    "refrigerator": "buzdolabı",
-    "book": "kitap",
-    "clock": "saat",
-    "vase": "vazo",
-    "scissors": "makas",
-    "teddy bear": "oyuncak ayı",
-    "hair drier": "saç kurutma makinesi",
-    "toothbrush": "diş fırçası"
-}
 
 # Sesli konuşma fonksiyonu
 def speak(text):
     subprocess.run(["espeak", "-v", "tr", "-s", "150", text])
 
-# Sınıf adlarını yükle
+# Türkçe etiketler
+turkish_labels = {
+    "person": "insan",
+    "cat": "kedi",
+    "dog": "köpek"
+}
+
+# İlgi duyulan nesneler
+interested_objects = ["person", "cat", "dog"]
+
+# Zaman takibi
+last_spoken_time_color = {"green": 0, "red": 0}
+last_spoken_object = {}
+speak_interval = 5  # saniye
+
+# Model dosyaları ve sınıf isimleri
 classNames = []
 classFile = "/home/fsociety/Desktop/Object_Detection_Files/coco.names"
 with open(classFile, "rt") as f:
     classNames = f.read().rstrip("\n").split("\n")
 
-# Model dosyaları
 configPath = "/home/fsociety/Desktop/Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
 weightsPath = "/home/fsociety/Desktop/Object_Detection_Files/frozen_inference_graph.pb"
 
@@ -327,67 +38,83 @@ net.setInputScale(1.0 / 127.5)
 net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
 
-# Daha önce söylenen nesneleri hatırlamak için sözlük
-last_spoken = {}
+# Kamera başlat
+cap = cv2.VideoCapture(0)
+cap.set(3, 640)
+cap.set(4, 480)
 
-def getObjects(img, thres, nms, draw=True, objects=[]):
-    classIds, confs, bbox = net.detect(img, confThreshold=thres, nmsThreshold=nms)
-    objectInfo = []
-    if len(objects) == 0:
-        objects = classNames
+# Ana döngü
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    current_time = time.time()
+
+    # HSV'ye çevir
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # Yeşil renk maskesi
+    lower_green = np.array([35, 70, 50])
+    upper_green = np.array([90, 255, 255])
+    green_mask = cv2.inRange(hsv, lower_green, upper_green)
+
+    # Kırmızı renk maskesi
+    lower_red1 = np.array([0, 70, 50])
+    upper_red1 = np.array([10, 255, 255])
+    lower_red2 = np.array([160, 70, 50])
+    upper_red2 = np.array([180, 255, 255])
+    red_mask = cv2.inRange(hsv, lower_red1, upper_red1) + cv2.inRange(hsv, lower_red2, upper_red2)
+
+    green_count = cv2.countNonZero(green_mask)
+    red_count = cv2.countNonZero(red_mask)
+
+    # Renk uyarıları
+    if green_count > red_count and green_count > 3000:
+        cv2.putText(frame, "Yesil algilandi - YEŞİL IŞIK GEC", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        if current_time - last_spoken_time_color["green"] > speak_interval:
+            speak("geç")
+            last_spoken_time_color["green"] = current_time
+
+    elif red_count > 3000:
+        cv2.putText(frame, "Kirmizi algilandi - KIRMIZI IŞIK BEKLE", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        if current_time - last_spoken_time_color["red"] > speak_interval:
+            speak("bekle")
+            last_spoken_time_color["red"] = current_time
+
+    # Nesne algılama
+    classIds, confs, bbox = net.detect(frame, confThreshold=0.45, nmsThreshold=0.2)
     if len(classIds) != 0:
         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
             className = classNames[classId - 1]
-            if className in objects:
-                objectInfo.append([box, className])
-                if draw:
-                    cv2.rectangle(img, box, color=(0, 255, 0), thickness=2)
-                    cv2.putText(img, className.upper(), (box[0]+10, box[1]+30),
-                                cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-                    cv2.putText(img, str(round(confidence*100, 2)), (box[0]+200, box[1]+30),
-                                cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    return img, objectInfo
+            if className in interested_objects:
+                x, y, w, h = box
+                box_height = h
+                turkish_name = turkish_labels.get(className, className)
 
-# Ana döngü
-if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
-    cap.set(3, 640)
-    cap.set(4, 480)
-
-    while True:
-        success, img = cap.read()
-        result, objectInfo = getObjects(img, 0.45, 0.2)
-
-        current_time = time.time()
-
-        for box, name in objectInfo:
-            turkish_name = turkish_labels.get(name, name)
-
-            # Mesafe tahmini için kutu yüksekliği
-            x, y, w, h = box
-            box_height = h
-
-            if box_height > 300:
-                distance_warning = "çok yakın, dikkatli ol"
-            elif box_height > 200:
-                distance_warning = "yakın"
-            else:
-                distance_warning = ""
-
-            # Eğer yeni algılandıysa veya belli bir süre geçtiyse sesli bildir
-            if name not in last_spoken or (current_time - last_spoken[name]) > 5:
-                if distance_warning:
-                    print(f"Uyarı: {turkish_name} {distance_warning}")
-                    speak(f"{turkish_name} {distance_warning}")
+                if box_height > 300:
+                    distance_warning = "çok yakın, dikkatli ol"
+                elif box_height > 200:
+                    distance_warning = "yakın"
                 else:
-                    print(f"Algılandı: {turkish_name}")
-                    speak(turkish_name)
+                    distance_warning = ""
 
-                last_spoken[name] = current_time
+                cv2.rectangle(frame, box, (0, 255, 0), 2)
+                cv2.putText(frame, f"{turkish_name}", (x+10, y+30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-        cv2.imshow("Kamera", img)
-        if cv2.waitKey(1) == 27:  # ESC tuşu
-            break
+                if className not in last_spoken_object or (current_time - last_spoken_object[className]) > speak_interval:
+                    if distance_warning:
+                        speak(f"{turkish_name} {distance_warning}")
+                        print(f"Uyarı: {turkish_name} {distance_warning}")
+                    else:
+                        speak(turkish_name)
+                        print(f"Algılandı: {turkish_name}")
+                    last_spoken_object[className] = current_time
 
-    cap.release()
-    cv2.destroyAllWindows()
+    # Görüntüyü göster
+    cv2.imshow("Kamera", frame)
+    if cv2.waitKey(1) & 0xFF == 27:
+        break
+
+cap.release()
+cv2.destroyAllWindows()
