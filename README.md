@@ -1,6 +1,6 @@
 # Gören Göz: Object Recognition and Voice Assistance System
 
-![Project Logo or a Section from the First Image]![IMG-20250412-WA0002](https://github.com/user-attachments/assets/038d5ff5-0a1c-41d4-8a03-b4cf94df6c25)
+![IMG-20250412-WA0002](https://github.com/user-attachments/assets/038d5ff5-0a1c-41d4-8a03-b4cf94df6c25)
 
 
 ## Project Aim
