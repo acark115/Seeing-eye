@@ -45,10 +45,10 @@ The "Gören Göz" system operates by integrating various sensors and artificial 
 
 ## Images
 
-![System in Operation (Example)]![DSC_0247](https://github.com/user-attachments/assets/51d98bf5-3ee3-4ca7-a222-6d4a8452ab67)
+![WhatsApp Image 2025-05-12 at 14 56 10](https://github.com/user-attachments/assets/bf486c22-23d7-4318-b254-b22481be1bf8)
 *The system being tested by a user.*
 
-![Object Recognition Output (Example)]![DSC_0270](https://github.com/user-attachments/assets/f0581dbe-e11f-4ac4-8a3f-50a66827b872)
+![DSC_0270](https://github.com/user-attachments/assets/f0581dbe-e11f-4ac4-8a3f-50a66827b872)
 *The image on the screen shows how the object recognition algorithm frames objects.*
 
 ## Contributions
